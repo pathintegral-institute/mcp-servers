@@ -11,16 +11,12 @@ This module contains the essential classes for handling quantum mechanics calcul
 import os
 import json
 import uuid
-import time
-import sys
-import shutil
 import numpy as np
-from typing import List, Dict, Any, Optional, Union, Tuple
+from typing import List, Dict, Any, Optional
 from pymatgen.core.structure import Structure
 from ase.atoms import Atoms
 from ase.constraints import FixAtoms
 from ase.dft.kpoints import BandPath, get_special_points
-import plotly.io as pio
 
 # Constants
 FORCE_THRESHOLD = 0.001
@@ -99,16 +95,19 @@ class CalculationInfo:
                  calculation_parameters: Optional[Dict[str, Any]] = None):
         """Initialize a CalculationInfo object."""
         # Create folder for the calculation
-        os.makedirs(os.path.join(project_folder_path, calculation_id), exist_ok=True)
+        os.makedirs(os.path.join(project_folder_path,
+                    calculation_id), exist_ok=True)
 
         # Set file paths
-        self.info_file_path = os.path.join(project_folder_path, calculation_id, 'info.json')
+        self.info_file_path = os.path.join(
+            project_folder_path, calculation_id, 'info.json')
 
         # If info file exists, load existing calculation
         if os.path.exists(self.info_file_path):
             instance = self.__class__.from_file(self.info_file_path)
             self.__dict__.update(instance.__dict__)
-            print(f"Loading an existing calculation from {os.path.join(project_folder_path, calculation_id)}")
+            print(
+                f"Loading an existing calculation from {os.path.join(project_folder_path, calculation_id)}")
             return
 
         # Initialize new calculation
@@ -127,10 +126,13 @@ class CalculationInfo:
 
     def define_file_paths(self):
         """Define file paths for calculation outputs."""
-        calculation_folder = os.path.join(self.project_folder_path, self.calculation_id)
-        self.structure_file_path = os.path.join(calculation_folder, 'structure.json')
+        calculation_folder = os.path.join(
+            self.project_folder_path, self.calculation_id)
+        self.structure_file_path = os.path.join(
+            calculation_folder, 'structure.json')
         self.status_file_path = os.path.join(calculation_folder, 'status.txt')
-        self.trajectory_file_path = os.path.join(calculation_folder, 'trajectory.traj')
+        self.trajectory_file_path = os.path.join(
+            calculation_folder, 'trajectory.traj')
         self.log_file_path = os.path.join(calculation_folder, 'log.txt')
         self.ckpt_file_path = os.path.join(calculation_folder, 'ckpt.gpw')
 
@@ -205,7 +207,7 @@ class CalculationInfo:
         if self.calculation_parameters:
             summary += f", Parameters: {json.dumps(self.calculation_parameters, indent=4)}"
         return summary
-    
+
     def status_file_content(self):
         """Get the content of the status file."""
         if not hasattr(self, 'status_file_path') or not os.path.exists(self.status_file_path):
@@ -215,7 +217,7 @@ class CalculationInfo:
                 return f.read()
         except Exception as e:
             return f"Error reading status file: {str(e)}"
-    
+
     def plot_output(self, **kwargs):
         """Plot output data (placeholder for actual implementation)."""
         # In a real implementation, this would generate plots based on calculation results
@@ -254,18 +256,21 @@ class CalculationProject:
     def load(self, project_folder_path: str):
         """Load a project from a folder."""
         self.project_folder_path = project_folder_path
-        calculation_id_path = os.path.join(project_folder_path, 'calculation_id_list.json')
+        calculation_id_path = os.path.join(
+            project_folder_path, 'calculation_id_list.json')
 
         if os.path.exists(calculation_id_path):
             with open(calculation_id_path, 'r') as f:
                 calculation_id_list = json.load(f)
 
             if not isinstance(calculation_id_list, list):
-                raise ValueError(f"Invalid calculation_id_list: {calculation_id_list}")
+                raise ValueError(
+                    f"Invalid calculation_id_list: {calculation_id_list}")
 
             self.info_list = []
             for calculation_id in calculation_id_list:
-                info_path = os.path.join(project_folder_path, calculation_id, 'info.json')
+                info_path = os.path.join(
+                    project_folder_path, calculation_id, 'info.json')
                 if os.path.exists(info_path):
                     self.info_list.append(CalculationInfo.from_file(info_path))
         else:
@@ -276,7 +281,8 @@ class CalculationProject:
         """Update the calculation_id_list.json file."""
         calculation_id_list = []
         if self.info_list is not None:
-            calculation_id_list = [info.calculation_id for info in self.info_list]
+            calculation_id_list = [
+                info.calculation_id for info in self.info_list]
 
         with open(os.path.join(self.project_folder_path, 'calculation_id_list.json'), 'w') as f:
             json.dump(calculation_id_list, f)
@@ -294,7 +300,7 @@ class CalculationProject:
                     "calculation_status": info.get_calculation_status()
                 })
         return history_list
-    
+
     def add_new(self, calculation_id: str, calculation_type: str, calculation_parameters: Optional[Dict[str, Any]] = None):
         """Update the project with a new calculation info, and update the calculation_id_list."""
         if self.info_list is None:
@@ -309,7 +315,7 @@ class CalculationProject:
         new_info.save_to_file()
         self.update_calculation_id_list()
         return new_info
-    
+
     def latest_finished_calc(self):
         """Get the latest finished calculation."""
         if self.info_list is None:
@@ -318,7 +324,7 @@ class CalculationProject:
             if info.calculation_status == 'finished':
                 return info
         return None
-    
+
     def latest_dos_calc(self):
         """Get the latest finished calculation with DOS, which means relax or ground_state."""
         if self.info_list is None:

@@ -8,11 +8,10 @@ checking calculation results, and managing calculation data.
 
 import os
 import sys
-import json
 import time
 import uuid
 import shutil
-from typing import Dict, Any, Optional, List, Union
+from typing import Dict, Any, Optional
 
 from data_class import CalculationProject, CalculationInfo, MAX_COMPUTATION_TIME
 import plotly.io as pio
@@ -23,7 +22,8 @@ def remove_calculation_subfolder(calculation_id: str, project_folder_path: str):
     try:
         shutil.rmtree(os.path.join(project_folder_path, calculation_id))
     except FileNotFoundError:
-        print(f"Subfolder {calculation_id} does not exist in {project_folder_path}.")
+        print(
+            f"Subfolder {calculation_id} does not exist in {project_folder_path}.")
 
 
 def perform_calculation_by_id(input_calculation_id: str, output_calculation_id: str, project_folder_path: str):
@@ -31,16 +31,20 @@ def perform_calculation_by_id(input_calculation_id: str, output_calculation_id: 
     Perform the calculation based on the input information specified by input_calculation_id
     and output the result to the folder specified by output_information_id.
     """
-    input_info_file_path = os.path.join(project_folder_path, input_calculation_id, 'info.json')
-    output_info_file_path = os.path.join(project_folder_path, output_calculation_id, 'info.json')
+    input_info_file_path = os.path.join(
+        project_folder_path, input_calculation_id, 'info.json')
+    output_info_file_path = os.path.join(
+        project_folder_path, output_calculation_id, 'info.json')
 
     input_info = CalculationInfo.from_file(input_info_file_path)
     output_info = CalculationInfo.from_file(output_info_file_path)
 
     if not input_info:
-        raise ValueError(f"No input information found in path {input_info_file_path}.")
+        raise ValueError(
+            f"No input information found in path {input_info_file_path}.")
     if not output_info:
-        raise ValueError(f"No output information found in path {output_info_file_path}.")
+        raise ValueError(
+            f"No output information found in path {output_info_file_path}.")
 
     # In a real implementation, this would call a function to perform the calculation
     # For now, we'll just update the status to simulate a completed calculation
@@ -67,7 +71,8 @@ def perform_calculation(calculation_type: str,
     Returns:
         A dictionary containing the project_folder_path and calculation_id.
     """
-    calculation_record = CalculationProject(project_folder_path=project_folder_path)
+    calculation_record = CalculationProject(
+        project_folder_path=project_folder_path)
 
     # Determine input calculation based on calculation type
     if calculation_type == 'relax' or calculation_type == 'ground_state':
@@ -114,13 +119,15 @@ def check_calculation_result(calculation_id: str, project_folder_path: str) -> D
     Returns:
         A dictionary containing the calculation status and log.
     """
-    calculation_info_file_path = os.path.join(project_folder_path, calculation_id, 'info.json')
+    calculation_info_file_path = os.path.join(
+        project_folder_path, calculation_id, 'info.json')
     calculation_info = None
 
     start_time = time.time()
     while True:
         try:
-            calculation_info = CalculationInfo.from_file(calculation_info_file_path)
+            calculation_info = CalculationInfo.from_file(
+                calculation_info_file_path)
             calculation_status = calculation_info.get_calculation_status()
             status_file_content = calculation_info.status_file_content()
         except Exception as e:
@@ -141,7 +148,8 @@ def check_calculation_result(calculation_id: str, project_folder_path: str) -> D
                     fig_str = pio.to_json(fig)
                     result["figure_str"] = fig_str
             except Exception as e:
-                print(f"Warning: Error generating plot: {str(e)}", file=sys.stderr, flush=True)
+                print(
+                    f"Warning: Error generating plot: {str(e)}", file=sys.stderr, flush=True)
 
             break
 
@@ -172,11 +180,13 @@ def stream_calculation_log(calculation_id: str, project_folder_path: str):
     Yields:
         The content of the status file.
     """
-    calculation_info_file_path = os.path.join(project_folder_path, calculation_id, 'info.json')
+    calculation_info_file_path = os.path.join(
+        project_folder_path, calculation_id, 'info.json')
 
     while True:
         try:
-            calculation_info = CalculationInfo.from_file(calculation_info_file_path)
+            calculation_info = CalculationInfo.from_file(
+                calculation_info_file_path)
             calculation_status = calculation_info.get_calculation_status()
             status_file_content = calculation_info.status_file_content()
             yield status_file_content
