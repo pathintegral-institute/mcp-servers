@@ -1,0 +1,5 @@
+numpy>=1.20.0
+pymatgen>=2022.0.0
+ase>=3.22.0
+plotly>=5.5.0
+gpaw>=21.6.0
