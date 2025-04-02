@@ -1,0 +1,21 @@
+[project]
+name = "quantum-computation"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "GabrielDrapor", email = "gabrieldrapor@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "loguru>=0.7.3",
+    "mcp>=1.6.0",
+    "plotly>=6.0.1",
+]
+
+[project.scripts]
+quantum-computation = "quantum_computation:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

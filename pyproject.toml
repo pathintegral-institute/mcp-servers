@@ -17,5 +17,5 @@ build-backend = "hatchling.build"
 members = [
     "servers/txyz-search",
     "servers/fetch",
-    "servers/python-code-execution",
+    "servers/python-code-execution", "servers/quantum_computation",
 ]
