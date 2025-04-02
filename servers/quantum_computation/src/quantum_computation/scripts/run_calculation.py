@@ -16,7 +16,7 @@ import json
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 
-def main(params_str: str, project_folder_path: str, output_calculation_id: str = None):
+def main(params_str: str, project_folder_path: str, output_calculation_id: str = ""):
     """
     Run a calculation with the specified parameters.
 
