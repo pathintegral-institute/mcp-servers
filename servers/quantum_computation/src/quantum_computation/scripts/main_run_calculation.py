@@ -1,4 +1,3 @@
-from gpaw_utils.lib import perform_calculation
 import argparse
 import json
 import sys
