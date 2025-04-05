@@ -10,7 +10,7 @@ from mcp.server.stdio import stdio_server
 from mcp.shared.exceptions import McpError
 from mcp.types import INTERNAL_ERROR, ErrorData, TextContent, Tool
 from pydantic import BaseModel, ValidationError
-
+from python_code_execution.schemas import BASE_BUILTIN_MODULES
 logger = logging.getLogger(__name__)
 class PythonCodeExecutionArgs(BaseModel):
     code: str
@@ -25,17 +25,7 @@ async def python_code_execution(code: str) -> list[TextContent]:
     will not be returned to the conversation.
 
     Allowed imports (standard library only):
-    - collections
-    - datetime
-    - itertools
-    - math
-    - queue
-    - random
-    - re (regular expressions)
-    - stat
-    - statistics
-    - time
-    - unicodedata
+    {}
 
     Limitations:
     - No file system access, network operations, or system calls
@@ -73,7 +63,7 @@ async def python_code_execution(code: str) -> list[TextContent]:
     median = statistics.median(data)
     print(f"Mean: {mean}, Median: {median}")
     ```
-    """
+    """.format("\n".join(f"- {module}" for module in BASE_BUILTIN_MODULES))
     # Clean the code by removing markdown code blocks if present
     cleaned_code = re.sub(r'```(?:python|py)?\s*\n|```\s*$', '', code)
     

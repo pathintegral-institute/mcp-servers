@@ -19,6 +19,7 @@ BASE_BUILTIN_MODULES = [
     "statistics",
     "time",
     "unicodedata",
+    "numpy",
 ]
 
 BASE_PYTHON_TOOLS = {
