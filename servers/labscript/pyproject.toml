@@ -1,0 +1,19 @@
+[project]
+name = "mcp-labscript"
+version = "0.1.0"
+description = "MCP server for running labscript-suite experiment scripts."
+requires-python = ">=3.10"
+dependencies = [
+    "mcp[cli]",
+    "labscript-suite",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.scripts]
+mcp-labscript = "labscript_server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/labscript_server"]
