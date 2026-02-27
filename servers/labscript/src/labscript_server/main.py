@@ -17,6 +17,54 @@ mcp = FastMCP()
 
 TIMEOUT = 60
 
+# Injected at the top of every wrapper to stub out Qt so labscript loads
+# without a display or PyQt5 installed. Uses only stdlib.
+# A plain MagicMock is not enough: Python's import system requires __path__
+# for packages to support submodule imports (e.g. qtutils.outputbox).
+# _AutoMockModule auto-creates child stubs on attribute access and registers
+# them in sys.modules, handling arbitrary-depth import chains.
+_QT_STUB_PREAMBLE = """\
+import sys as _sys
+import types as _types
+from unittest.mock import MagicMock as _MagicMock
+
+_QT_ROOTS = ('PyQt5', 'qtutils', 'blacs')
+
+class _AutoMockModule(_types.ModuleType):
+    def __init__(self, name):
+        super().__init__(name)
+        self.__path__ = []      # marks this as a package
+        self.__file__ = None    # prevents os.path.realpath() crash
+        self.__spec__ = None
+        self.__loader__ = None
+        self.__package__ = name
+    def __getattr__(self, name):
+        if name == '__all__':
+            return []
+        # Attribute access on an already-imported stub (e.g. qtutils.qt.QtCore.*)
+        return _MagicMock()
+    def __call__(self, *args, **kwargs):
+        return _MagicMock()
+    def __iter__(self):
+        return iter([])
+
+import importlib.util as _ilu
+
+class _QtMockFinder:
+    \"\"\"MetaPathFinder that intercepts all PyQt5.* and qtutils.* imports
+    before the real packages on disk are reached.\"\"\"
+    def find_spec(self, fullname, path, target=None):
+        if any(fullname == r or fullname.startswith(r + '.') for r in _QT_ROOTS):
+            return _ilu.spec_from_loader(fullname, self, origin=f'<mock:{fullname}>')
+        return None
+    def create_module(self, spec):
+        return _AutoMockModule(spec.name)
+    def exec_module(self, module):
+        pass  # nothing to execute; attributes are lazy via __getattr__
+
+_sys.meta_path.insert(0, _QtMockFinder())
+"""
+
 
 @mcp.tool()
 def run_labscript(
@@ -80,30 +128,34 @@ def run_labscript(
             if not os.path.isfile(labscript_file):
                 raise ValueError(f"script_path does not exist: {labscript_file}")
 
-        # Step 2: build wrapper if globals provided
+        # Step 2: always build a wrapper that injects Qt stubs, then optionally
+        # injects globals, then exec()s the target script.
+        globals_block = ""
         if globals:
             globals_repr = repr(globals)
-            wrapper_code = (
-                "import builtins as _builtins\n"
-                f"_globals_dict = {globals_repr}\n"
-                "for _k, _v in _globals_dict.items():\n"
-                "    setattr(_builtins, _k, _v)\n"
-                f"exec(open({repr(labscript_file)}).read(), {{'__file__': {repr(labscript_file)}}})\n"
+            globals_block = (
+                f"import builtins as _builtins\n"
+                f"for _k, _v in {globals_repr}.items():\n"
+                f"    setattr(_builtins, _k, _v)\n"
             )
-            tmp_wrapper = tempfile.NamedTemporaryFile(
-                suffix=".py", mode="w", delete=False, encoding="utf-8"
-            )
-            tmp_wrapper.write(wrapper_code)
-            tmp_wrapper.flush()
-            tmp_wrapper.close()
-            run_file = tmp_wrapper.name
-        else:
-            run_file = labscript_file
+
+        wrapper_code = (
+            _QT_STUB_PREAMBLE
+            + globals_block
+            + f"exec(open({repr(labscript_file)}).read(), {{'__file__': {repr(labscript_file)}}})\n"
+        )
+
+        tmp_wrapper = tempfile.NamedTemporaryFile(
+            suffix=".py", mode="w", delete=False, encoding="utf-8"
+        )
+        tmp_wrapper.write(wrapper_code)
+        tmp_wrapper.flush()
+        tmp_wrapper.close()
 
         # Step 3: execute
         try:
             result = subprocess.run(
-                [sys.executable, run_file],
+                [sys.executable, tmp_wrapper.name],
                 capture_output=True,
                 text=True,
                 timeout=TIMEOUT,
