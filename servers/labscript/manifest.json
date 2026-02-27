@@ -1,0 +1,30 @@
+{
+  "dxt_version": "0.1",
+  "name": "labscript",
+  "display_name": "Labscript Runner",
+  "version": "0.1.0",
+  "description": "MCP server for running labscript-suite experiment scripts.",
+  "author": {
+    "name": "Path Integral Institute"
+  },
+  "server": {
+    "type": "python",
+    "entry_point": "",
+    "mcp_config": {
+      "command": "uvx",
+      "args": ["mcp-science", "labscript"],
+      "env": {}
+    }
+  },
+  "tools": [
+    {
+      "name": "run_labscript",
+      "description": "Run a labscript-suite Python experiment script, optionally injecting globals into the script namespace."
+    }
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pathintegral-institute/mcp.science"
+  }
+}
