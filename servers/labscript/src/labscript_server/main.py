@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 import tempfile
 import logging
 from typing import Optional
@@ -76,6 +77,8 @@ def run_labscript(
             labscript_file = tmp_script.name
         else:
             labscript_file = os.path.abspath(script_path)
+            if not os.path.isfile(labscript_file):
+                raise ValueError(f"script_path does not exist: {labscript_file}")
 
         # Step 2: build wrapper if globals provided
         if globals:
@@ -100,7 +103,7 @@ def run_labscript(
         # Step 3: execute
         try:
             result = subprocess.run(
-                ["python", run_file],
+                [sys.executable, run_file],
                 capture_output=True,
                 text=True,
                 timeout=TIMEOUT,
