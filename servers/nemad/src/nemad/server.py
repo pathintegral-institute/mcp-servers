@@ -13,8 +13,7 @@ mcp = FastMCP()
 # Global cache for search results
 _search_cache: Dict[str, List[Dict[str, Any]]] = {}
 
-NEMAD_BASE_URL = "https://nemad.org/api"
-
+NEMAD_BASE_URL = os.getenv("NEMAD_BASE_URL", "https://api.nemad.org/api")
 
 def get_api_key() -> str:
     """Get API key from environment variable"""
