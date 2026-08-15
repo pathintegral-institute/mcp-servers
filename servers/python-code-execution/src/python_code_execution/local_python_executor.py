@@ -8,7 +8,10 @@ import builtins
 import difflib
 import inspect
 import logging
-import resource
+try:
+    import resource
+except ImportError:  # Windows - setrlimit sites below are gated on sys.platform == "linux"
+    resource = None
 import sys
 import re
 from collections.abc import Mapping

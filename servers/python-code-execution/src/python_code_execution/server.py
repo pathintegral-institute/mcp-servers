@@ -1,6 +1,7 @@
 
 import logging
 import os
+import sys
 import json
 from typing import Any, Callable, List, Optional, Union, cast
 
@@ -28,10 +29,9 @@ async def python_code_execution(code: str) -> list[Union[TextContent, ImageConte
     # Run the code evaluation by calling safe_execute.py with a subprocess
     try:
         # Construct the command with proper escaping
+        _exe = ".exe" if sys.platform == "win32" else ""
         cmd = [
-            "uv",
-            "run",
-            "safe-execute",
+            os.path.join(os.path.dirname(sys.executable), "safe-execute" + _exe),
             "--code", cleaned_code
         ]
 
@@ -39,6 +39,7 @@ async def python_code_execution(code: str) -> list[Union[TextContent, ImageConte
             cmd,
             capture_output=True,
             text=True,
+            stdin=subprocess.DEVNULL,
             timeout=100
         )
 
